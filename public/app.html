@@ -15,9 +15,7 @@
         --accent-2: #2f7f69;
         --muted: #6e5a45;
       }
-
       * { box-sizing: border-box; }
-
       body {
         margin: 0;
         min-height: 100vh;
@@ -28,32 +26,11 @@
           radial-gradient(900px 480px at 105% 0%, #ffc89f 0%, transparent 50%),
           linear-gradient(135deg, var(--bg-1), var(--bg-2));
       }
-
-      .shell {
-        max-width: 980px;
-        margin: 0 auto;
-        padding: 2rem 1rem 3rem;
-      }
-
-      .hero {
-        display: flex;
-        gap: 1rem;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-      }
-
-      h1 {
-        margin: 0;
-        font-size: clamp(1.8rem, 3.4vw, 3rem);
-        letter-spacing: 0.01em;
-      }
-
-      .subtitle {
-        margin-top: 0.5rem;
-        color: var(--muted);
-      }
-
+      .shell { max-width: 980px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+      .hero { display: flex; gap: 1rem; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+      h1 { margin: 0; font-size: clamp(1.8rem, 3.4vw, 3rem); letter-spacing: 0.01em; }
+      h2 { margin-top: 0; }
+      .subtitle { margin-top: 0.5rem; color: var(--muted); }
       .panel {
         background: var(--panel);
         border: 1px solid var(--stroke);
@@ -62,21 +39,9 @@
         box-shadow: 0 12px 30px rgba(130, 84, 36, 0.1);
         margin-bottom: 1rem;
       }
-
-      .row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.6rem;
-        flex-wrap: wrap;
-      }
-
-      .days {
-        display: grid;
-        gap: 0.7rem;
-      }
-
-      .day {
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
+      .days, .menu-grid { display: grid; gap: 0.7rem; }
+      .day, .menu-row {
         display: flex;
         align-items: center;
         gap: 0.65rem;
@@ -84,50 +49,38 @@
         border-radius: 10px;
         transition: background-color .18s ease;
       }
-
-      .day:hover { background: #fff2e0; }
-
-      .day input {
-        width: 1rem;
-        height: 1rem;
-        accent-color: var(--accent-2);
+      .day:hover, .menu-row:hover { background: #fff2e0; }
+      .day input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--accent-2); }
+      .menu-row input[type="text"] {
+        width: 100%;
+        border: 1px solid var(--stroke);
+        border-radius: 8px;
+        padding: 0.45rem 0.55rem;
+        background: #fff;
       }
-
-      .day .date {
-        color: var(--muted);
-        margin-left: auto;
-        font-size: .92rem;
-      }
-
-      button {
+      .date { color: var(--muted); margin-left: auto; font-size: .92rem; }
+      button, select {
         border: 0;
         border-radius: 10px;
         padding: 0.65rem 1rem;
         font-weight: 700;
-        cursor: pointer;
       }
-
-      .primary {
-        background: var(--accent);
-        color: #fff;
-      }
-
-      .ghost {
-        background: #f9efe2;
-        color: #6e5031;
-      }
-
-      .admin {
-        display: none;
-      }
-
-      .admin.show {
-        display: block;
-      }
-
+      select { border: 1px solid var(--stroke); background: #fff; }
+      button { cursor: pointer; }
+      .primary { background: var(--accent); color: #fff; }
+      .ghost { background: #f9efe2; color: #6e5031; }
+      .admin { display: none; }
+      .admin.show { display: block; }
       .ok { color: #146b46; }
       .err { color: #a21919; }
-
+      .today {
+        display: inline-block;
+        padding: 0.35rem 0.6rem;
+        border-radius: 8px;
+        background: #fff1de;
+        color: #6b4a24;
+        font-weight: 700;
+      }
       @media (max-width: 640px) {
         .shell { padding-top: 1.2rem; }
         .hero { flex-direction: column; }
@@ -140,7 +93,7 @@
       <section class="hero">
         <div>
           <h1>Lunsjplan</h1>
-          <p class="subtitle">Huk av dagene du er pa jobb denne uka.</p>
+          <p class="subtitle">Registrer naervar per dag, og se meny for valgt uke.</p>
         </div>
         <button id="logoutBtn" class="ghost">Logg ut</button>
       </section>
@@ -148,12 +101,27 @@
       <section class="panel">
         <div class="row">
           <strong id="user">Innlogget:</strong>
+          <label>
+            Uke:
+            <select id="weekSelect">
+              <option value="current">Denne uken</option>
+              <option value="next">Neste uke</option>
+            </select>
+          </label>
+        </div>
+        <div class="row" style="margin-top:0.5rem;">
           <span id="week">Uke starter:</span>
+          <span id="todayDish" class="today">Dagens rett: -</span>
         </div>
       </section>
 
       <section class="panel">
-        <h2>Denne uka</h2>
+        <h2>Meny</h2>
+        <div id="menuView" class="menu-grid"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Dager denne uka</h2>
         <div id="days" class="days"></div>
         <div style="margin-top: 1rem;">
           <button id="saveBtn" class="primary">Lagre ukevalg</button>
@@ -163,8 +131,12 @@
 
       <section id="adminPanel" class="panel admin">
         <h2>Administrator</h2>
-        <p class="subtitle" style="margin-top:0">Last ned rapport for innevaerende uke.</p>
-        <button id="downloadReportBtn" class="ghost">Last ned Excel-rapport</button>
+        <p class="subtitle" style="margin-top:0">Oppdater meny og last ned rapport for valgt uke.</p>
+        <div id="menuEditor" class="menu-grid"></div>
+        <div class="row" style="margin-top:0.9rem;">
+          <button id="saveMenuBtn" class="ghost">Lagre meny</button>
+          <button id="downloadReportBtn" class="ghost">Last ned Excel-rapport</button>
+        </div>
         <p id="adminStatus"></p>
       </section>
     </main>
@@ -184,12 +156,43 @@
         el.className = cls;
       }
 
-      function render() {
-        if (!model) return;
+      function currentWeekSelection() {
+        return document.getElementById("weekSelect").value;
+      }
 
-        document.getElementById("user").textContent = `Innlogget: ${model.user.email}`;
-        document.getElementById("week").textContent = `Uke starter: ${model.weekStart}`;
+      function renderMenuView() {
+        const menuView = document.getElementById("menuView");
+        menuView.innerHTML = "";
 
+        model.weekdays.forEach((d) => {
+          const row = document.createElement("div");
+          row.className = "menu-row";
+          row.innerHTML = `
+            <strong>${d.label}</strong>
+            <span>${model.menu[d.key] || "-"}</span>
+            <span class="date">${d.key}</span>
+          `;
+          menuView.appendChild(row);
+        });
+      }
+
+      function renderMenuEditor() {
+        const menuEditor = document.getElementById("menuEditor");
+        menuEditor.innerHTML = "";
+
+        model.weekdays.forEach((d) => {
+          const row = document.createElement("label");
+          row.className = "menu-row";
+          row.innerHTML = `
+            <strong style="min-width:95px">${d.label}</strong>
+            <input type="text" data-menu-key="${d.key}" value="${(model.menu[d.key] || "").replace(/"/g, "&quot;")}" placeholder="Dagens rett" />
+            <span class="date">${d.key}</span>
+          `;
+          menuEditor.appendChild(row);
+        });
+      }
+
+      function renderDays() {
         const daysDiv = document.getElementById("days");
         daysDiv.innerHTML = "";
 
@@ -203,22 +206,39 @@
           `;
           daysDiv.appendChild(wrap);
         });
+      }
+
+      function render() {
+        document.getElementById("user").textContent = `Innlogget: ${model.user.email}`;
+        document.getElementById("week").textContent = `Uke starter: ${model.weekStart}`;
+        document.getElementById("todayDish").textContent = `Dagens rett: ${model.todayDish || "ikke satt"}`;
+        document.getElementById("weekSelect").value = model.week;
+
+        renderMenuView();
+        renderDays();
 
         const adminPanel = document.getElementById("adminPanel");
         adminPanel.classList.toggle("show", Boolean(model.isAdmin));
+        if (model.isAdmin) {
+          renderMenuEditor();
+        }
       }
 
-      async function init() {
+      async function loadWeek(week) {
         const me = await fetchJson("/api/me");
         if (!me.user) {
           window.location.href = "/login.html";
           return;
         }
 
-        const week = await fetchJson("/api/week");
-        model = { ...week, user: me.user, isAdmin: me.isAdmin };
+        const weekData = await fetchJson(`/api/week?week=${encodeURIComponent(week)}`);
+        model = { ...weekData, user: me.user, isAdmin: me.isAdmin };
         render();
       }
+
+      document.getElementById("weekSelect").addEventListener("change", async (e) => {
+        await loadWeek(e.target.value);
+      });
 
       document.getElementById("saveBtn").addEventListener("click", async () => {
         const checks = document.querySelectorAll("#days input[type=checkbox]");
@@ -226,9 +246,8 @@
         checks.forEach((c) => { days[c.dataset.key] = c.checked; });
 
         setStatus("status", "Lagrer...");
-
         try {
-          await fetchJson("/api/week", {
+          await fetchJson(`/api/week?week=${encodeURIComponent(currentWeekSelection())}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ days })
@@ -239,11 +258,29 @@
         }
       });
 
+      document.getElementById("saveMenuBtn").addEventListener("click", async () => {
+        const inputs = document.querySelectorAll("#menuEditor input[data-menu-key]");
+        const menu = {};
+        inputs.forEach((i) => { menu[i.dataset.menuKey] = i.value; });
+
+        setStatus("adminStatus", "Lagrer meny...");
+        try {
+          await fetchJson(`/api/admin/menu?week=${encodeURIComponent(currentWeekSelection())}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ menu })
+          });
+          await loadWeek(currentWeekSelection());
+          setStatus("adminStatus", "Meny lagret.", "ok");
+        } catch (e) {
+          setStatus("adminStatus", `Feil: ${e.message}`, "err");
+        }
+      });
+
       document.getElementById("downloadReportBtn").addEventListener("click", async () => {
         setStatus("adminStatus", "Lager rapport...");
-
         try {
-          const res = await fetch("/api/admin/report/download");
+          const res = await fetch(`/api/admin/report/download?week=${encodeURIComponent(currentWeekSelection())}`);
           if (!res.ok) {
             throw new Error(await res.text());
           }
@@ -273,7 +310,7 @@
         window.location.href = "/login.html";
       });
 
-      init().catch((e) => {
+      loadWeek("current").catch((e) => {
         setStatus("status", `Feil under init: ${e.message}`, "err");
       });
     </script>

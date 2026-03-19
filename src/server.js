@@ -1,11 +1,17 @@
-﻿import "dotenv/config";
+import "dotenv/config";
 import express from "express";
 import session from "express-session";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildOidcClient, handleCallback, startLogin } from "./services/auth.js";
-import { getCurrentWeekStartIso, weekdaysFromMonday } from "./date-utils.js";
-import { getSubmission, getSubmissionsByWeek, upsertSubmission } from "./data/store.js";
+import { resolveWeekStart, toIsoDate, weekdaysFromMonday } from "./date-utils.js";
+import {
+  getMenuForWeek,
+  getSubmission,
+  getSubmissionsByWeek,
+  upsertMenuForWeek,
+  upsertSubmission
+} from "./data/store.js";
 import { buildWeeklyExcel } from "./services/excel.js";
 import { runReportJob, scheduleDailyReport } from "./services/scheduler.js";
 
@@ -57,6 +63,28 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+function getRequestedWeekStart(req) {
+  const weekInput = req.query.week === "next" ? "next" : "current";
+  return { weekInput, weekStart: resolveWeekStart(weekInput) };
+}
+
+function emptyDays(weekdays) {
+  return Object.fromEntries(weekdays.map((d) => [d.key, false]));
+}
+
+function emptyMenu(weekdays) {
+  return Object.fromEntries(weekdays.map((d) => [d.key, ""]));
+}
+
+function normalizeMenu(input, weekdays) {
+  const normalized = {};
+  weekdays.forEach((d) => {
+    const value = input?.[d.key];
+    normalized[d.key] = typeof value === "string" ? value.trim() : "";
+  });
+  return normalized;
+}
+
 app.get("/auth/login", async (req, res) => {
   if (devBypassEmail) {
     return res.redirect("/auth/dev-login");
@@ -104,19 +132,27 @@ app.get("/api/me", (req, res) => {
 });
 
 app.get("/api/week", requireAuth, async (req, res) => {
-  const weekStart = getCurrentWeekStartIso();
+  const { weekInput, weekStart } = getRequestedWeekStart(req);
   const weekdays = weekdaysFromMonday(new Date(weekStart));
   const existing = await getSubmission(req.session.user.email, weekStart);
+  const menuEntry = await getMenuForWeek(weekStart);
+  const menu = menuEntry?.dishes || emptyMenu(weekdays);
+
+  const todayKey = toIsoDate(new Date());
+  const todayIsInSelectedWeek = weekdays.some((d) => d.key === todayKey);
 
   res.json({
+    week: weekInput,
     weekStart,
     weekdays,
-    days: existing?.days || Object.fromEntries(weekdays.map((d) => [d.key, false]))
+    days: existing?.days || emptyDays(weekdays),
+    menu,
+    todayDish: todayIsInSelectedWeek ? menu[todayKey] || "" : ""
   });
 });
 
 app.post("/api/week", requireAuth, async (req, res) => {
-  const weekStart = getCurrentWeekStartIso();
+  const { weekStart } = getRequestedWeekStart(req);
   const weekdays = weekdaysFromMonday(new Date(weekStart));
 
   const inputDays = req.body?.days || {};
@@ -138,6 +174,15 @@ app.post("/api/week", requireAuth, async (req, res) => {
   res.json({ ok: true, entry });
 });
 
+app.post("/api/admin/menu", requireAdmin, async (req, res) => {
+  const { weekStart } = getRequestedWeekStart(req);
+  const weekdays = weekdaysFromMonday(new Date(weekStart));
+  const dishes = normalizeMenu(req.body?.menu || {}, weekdays);
+
+  const menu = await upsertMenuForWeek(weekStart, dishes, req.session.user.email);
+  res.json({ ok: true, menu });
+});
+
 app.post("/api/admin/run-report", async (req, res) => {
   const token = req.headers["x-admin-token"];
   if (!process.env.ADMIN_TRIGGER_TOKEN || token !== process.env.ADMIN_TRIGGER_TOKEN) {
@@ -153,14 +198,13 @@ app.post("/api/admin/run-report", async (req, res) => {
 });
 
 app.get("/api/admin/report/download", requireAdmin, async (req, res) => {
-  const weekStart = getCurrentWeekStartIso();
+  const { weekStart } = getRequestedWeekStart(req);
   const submissions = await getSubmissionsByWeek(weekStart);
+  const menuEntry = await getMenuForWeek(weekStart);
+  const weekdays = weekdaysFromMonday(new Date(weekStart));
+  const menu = menuEntry?.dishes || emptyMenu(weekdays);
 
-  if (submissions.length === 0) {
-    return res.status(404).json({ error: `Ingen registreringer for uke ${weekStart}.` });
-  }
-
-  const excelPath = await buildWeeklyExcel(weekStart, submissions);
+  const excelPath = await buildWeeklyExcel(weekStart, submissions, menu);
   return res.download(excelPath, `lunsjrapport-${weekStart}.xlsx`);
 });
 

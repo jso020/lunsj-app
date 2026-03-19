@@ -1,9 +1,15 @@
-﻿export function getMonday(date = new Date()) {
+export function getMonday(date = new Date()) {
   const d = new Date(date);
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+export function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
   return d;
 }
 
@@ -24,6 +30,17 @@ export function weekdaysFromMonday(monday) {
   });
 }
 
+export function getWeekStartIso(weekOffset = 0) {
+  const monday = getMonday();
+  const target = addDays(monday, weekOffset * 7);
+  return toIsoDate(target);
+}
+
 export function getCurrentWeekStartIso() {
-  return toIsoDate(getMonday());
+  return getWeekStartIso(0);
+}
+
+export function resolveWeekStart(input) {
+  if (input === "next") return getWeekStartIso(1);
+  return getWeekStartIso(0);
 }

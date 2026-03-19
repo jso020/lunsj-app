@@ -6,6 +6,8 @@ En enkel app der ansatte logger inn med OAuth2/OIDC, registrerer om de er pa job
 
 - OIDC-login med domene-sjekk (styres med `ALLOWED_EMAIL_DOMAIN`, default `computas.com`)
 - Registrering av ukevalg (man-fre)
+- Valg av uke (denne eller neste)
+- Ukemeny med "dagens rett"
 - Lagring i lokal JSON-fil
 - Daglig scheduler kl. 08:00 (serverens lokale tid)
 - Excel-rapport (`.xlsx`) + e-post via SMTP
@@ -42,9 +44,10 @@ Da vil "Logg inn med OAuth2" bruke lokal dev-login automatisk.
 
 - `GET /api/me` - hvem er logget inn
 - `GET /api/week` - henter status for innevaerende uke
-- `POST /api/week` - lagrer status for innevaerende uke
+- `POST /api/week` - lagrer status for valgt uke (`?week=current|next`)
 - `POST /api/admin/run-report` - trigger rapport manuelt (`x-admin-token`)
 - `GET /api/admin/report/download` - laster ned Excel for innevaerende uke (krever innlogget admin)
+- `POST /api/admin/menu` - oppdaterer meny for valgt uke (`?week=current|next`, admin)
 
 ## Neste steg
 

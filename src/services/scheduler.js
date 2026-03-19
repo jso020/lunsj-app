@@ -1,5 +1,5 @@
-﻿import { getCurrentWeekStartIso, weekdaysFromMonday } from "../date-utils.js";
-import { getSubmissionsByWeek } from "../data/store.js";
+import { getCurrentWeekStartIso } from "../date-utils.js";
+import { getMenuForWeek, getSubmissionsByWeek } from "../data/store.js";
 import { buildWeeklyExcel } from "./excel.js";
 import { sendWeeklyEmail } from "./email.js";
 
@@ -16,13 +16,13 @@ function msUntilNextEight() {
 async function runReportJob() {
   const weekStart = getCurrentWeekStartIso();
   const submissions = await getSubmissionsByWeek(weekStart);
+  const menuEntry = await getMenuForWeek(weekStart);
 
   if (submissions.length === 0) {
-    console.log(`[scheduler] Ingen registreringer for uke ${weekStart}. Hopper over utsending.`);
-    return;
+    console.log(`[scheduler] Ingen registreringer for uke ${weekStart}. Sender tom oversikt med meny.`);
   }
 
-  const excelPath = await buildWeeklyExcel(weekStart, submissions);
+  const excelPath = await buildWeeklyExcel(weekStart, submissions, menuEntry?.dishes || {});
   await sendWeeklyEmail({ weekStart, excelPath });
   console.log(`[scheduler] Sendte rapport for uke ${weekStart} til mottaker.`);
 }

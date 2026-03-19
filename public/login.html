@@ -1,20 +1,71 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="no">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lunsj-app login</title>
     <style>
-      body { font-family: Segoe UI, sans-serif; max-width: 720px; margin: 3rem auto; padding: 1rem; }
-      .box { border: 1px solid #ddd; border-radius: 8px; padding: 2rem; }
-      a.button { display: inline-block; background: #0b5fff; color: #fff; text-decoration: none; padding: 0.7rem 1rem; border-radius: 6px; }
+      :root {
+        --bg-1: #fffbf3;
+        --bg-2: #ffe2be;
+        --card: #fffdf8;
+        --stroke: #f0d9ba;
+        --ink: #2a1905;
+        --accent: #c8491a;
+        --muted: #6d5a46;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 1.2rem;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(920px 420px at 0% -20%, #ffe4bf 0%, transparent 60%),
+          radial-gradient(760px 400px at 100% 10%, #ffd9ad 0%, transparent 54%),
+          linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      }
+
+      .card {
+        width: min(620px, 100%);
+        background: var(--card);
+        border: 1px solid var(--stroke);
+        border-radius: 18px;
+        padding: 2rem;
+        box-shadow: 0 15px 42px rgba(102, 71, 38, 0.14);
+      }
+
+      h1 {
+        margin: 0 0 .65rem;
+        font-size: clamp(2rem, 4vw, 2.9rem);
+      }
+
+      p {
+        margin: 0 0 1.2rem;
+        color: var(--muted);
+      }
+
+      a.button {
+        display: inline-block;
+        text-decoration: none;
+        background: var(--accent);
+        color: #fff;
+        padding: .75rem 1.15rem;
+        border-radius: 10px;
+        font-weight: 700;
+      }
     </style>
   </head>
   <body>
-    <div class="box">
-      <h1>Lunsj-app</h1>
-      <p>Logg inn med Computas-brukeren din for a registrere om du er pa jobb denne uka.</p>
+    <main class="card">
+      <h1>Lunsjplan</h1>
+      <p>Logg inn med Computas-brukeren din for aa registrere om du er pa jobb denne uka.</p>
       <a class="button" href="/auth/login">Logg inn med OAuth2</a>
-    </div>
+    </main>
   </body>
 </html>

@@ -5,7 +5,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildOidcClient, handleCallback, startLogin } from "./services/auth.js";
 import { getCurrentWeekStartIso, weekdaysFromMonday } from "./date-utils.js";
-import { getSubmission, upsertSubmission } from "./data/store.js";
+import { getSubmission, getSubmissionsByWeek, upsertSubmission } from "./data/store.js";
+import { buildWeeklyExcel } from "./services/excel.js";
 import { runReportJob, scheduleDailyReport } from "./services/scheduler.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,6 +15,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const devBypassEmail = process.env.DEV_AUTH_BYPASS_EMAIL?.toLowerCase();
+const adminEmails = new Set(
+  (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+);
 
 app.use(express.json());
 app.use(
@@ -32,6 +39,20 @@ let oidcClient;
 function requireAuth(req, res, next) {
   if (!req.session.user) {
     return res.redirect("/login.html");
+  }
+  next();
+}
+
+function isAdminUser(user) {
+  return Boolean(user?.email && adminEmails.has(user.email.toLowerCase()));
+}
+
+function requireAdmin(req, res, next) {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  if (!isAdminUser(req.session.user)) {
+    return res.status(403).json({ error: "Forbidden" });
   }
   next();
 }
@@ -78,7 +99,8 @@ app.post("/auth/logout", (req, res) => {
 });
 
 app.get("/api/me", (req, res) => {
-  res.json({ user: req.session.user || null });
+  const user = req.session.user || null;
+  res.json({ user, isAdmin: isAdminUser(user) });
 });
 
 app.get("/api/week", requireAuth, async (req, res) => {
@@ -128,6 +150,18 @@ app.post("/api/admin/run-report", async (req, res) => {
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
+});
+
+app.get("/api/admin/report/download", requireAdmin, async (req, res) => {
+  const weekStart = getCurrentWeekStartIso();
+  const submissions = await getSubmissionsByWeek(weekStart);
+
+  if (submissions.length === 0) {
+    return res.status(404).json({ error: `Ingen registreringer for uke ${weekStart}.` });
+  }
+
+  const excelPath = await buildWeeklyExcel(weekStart, submissions);
+  return res.download(excelPath, `lunsjrapport-${weekStart}.xlsx`);
 });
 
 app.get("/", requireAuth, (req, res) => {

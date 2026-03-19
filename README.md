@@ -10,6 +10,7 @@ En enkel app der ansatte logger inn med OAuth2/OIDC, registrerer om de er pa job
 - Daglig scheduler kl. 08:00 (serverens lokale tid)
 - Excel-rapport (`.xlsx`) + e-post via SMTP
 - Admin-endepunkt for manuell rapportkjøring
+- Admin-knapp i UI for nedlasting av Excel-rapport
 
 ## Kjor lokalt
 
@@ -35,6 +36,7 @@ Da vil "Logg inn med OAuth2" bruke lokal dev-login automatisk.
 - `SESSION_SECRET`
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `REPORT_FROM_EMAIL`, `REPORT_TO_EMAIL`
 - `ADMIN_TRIGGER_TOKEN`
+- `ADMIN_EMAILS` (kommaseparert liste over admin-brukere)
 
 ## API
 
@@ -42,6 +44,7 @@ Da vil "Logg inn med OAuth2" bruke lokal dev-login automatisk.
 - `GET /api/week` - henter status for innevaerende uke
 - `POST /api/week` - lagrer status for innevaerende uke
 - `POST /api/admin/run-report` - trigger rapport manuelt (`x-admin-token`)
+- `GET /api/admin/report/download` - laster ned Excel for innevaerende uke (krever innlogget admin)
 
 ## Neste steg
 

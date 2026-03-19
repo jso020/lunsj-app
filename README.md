@@ -4,7 +4,7 @@ En enkel app der ansatte logger inn med OAuth2/OIDC, registrerer om de er pa job
 
 ## Funksjoner i v1
 
-- OIDC-login med domene-sjekk (`@computas.com`)
+- OIDC-login med domene-sjekk (styres med `ALLOWED_EMAIL_DOMAIN`, default `computas.com`)
 - Registrering av ukevalg (man-fre)
 - Lagring i lokal JSON-fil
 - Daglig scheduler kl. 08:00 (serverens lokale tid)
@@ -23,6 +23,7 @@ En enkel app der ansatte logger inn med OAuth2/OIDC, registrerer om de er pa job
 ## Viktige env-variabler
 
 - `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URI`
+- `ALLOWED_EMAIL_DOMAIN`
 - `SESSION_SECRET`
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `REPORT_FROM_EMAIL`, `REPORT_TO_EMAIL`
 - `ADMIN_TRIGGER_TOKEN`

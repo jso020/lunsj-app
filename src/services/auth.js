@@ -54,10 +54,11 @@ export async function handleCallback(req, res, client) {
 
   const claims = tokenSet.claims();
   const email = (claims.email || claims.preferred_username || "").toLowerCase();
+  const allowedDomain = (process.env.ALLOWED_EMAIL_DOMAIN || "computas.com").toLowerCase();
 
-  if (!email.endsWith("@computas.com")) {
+  if (!email.endsWith(`@${allowedDomain}`)) {
     req.session.user = null;
-    return res.status(403).send("Kun @computas.com-brukere er tillatt.");
+    return res.status(403).send(`Kun @${allowedDomain}-brukere er tillatt.`);
   }
 
   req.session.user = {

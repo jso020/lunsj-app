@@ -15,7 +15,8 @@ async function ensureDb() {
 export async function readDb() {
   await ensureDb();
   const raw = await fs.readFile(DB_PATH, "utf8");
-  return JSON.parse(raw);
+  const normalized = raw.replace(/^\uFEFF/, "");
+  return JSON.parse(normalized);
 }
 
 export async function writeDb(data) {

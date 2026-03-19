@@ -1,0 +1,110 @@
+﻿<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lunsj-app</title>
+    <style>
+      body { font-family: Segoe UI, sans-serif; max-width: 840px; margin: 2rem auto; padding: 1rem; }
+      .row { display: flex; justify-content: space-between; align-items: center; }
+      .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+      .days { display: grid; gap: .6rem; }
+      button { padding: .6rem .9rem; border: 0; border-radius: 6px; cursor: pointer; }
+      .primary { background: #0b5fff; color: white; }
+      .secondary { background: #efefef; }
+      .ok { color: #1a7f37; }
+      .err { color: #b62324; }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <h1>Lunsj-app</h1>
+      <button id="logoutBtn" class="secondary">Logg ut</button>
+    </div>
+
+    <div class="card">
+      <div id="user"></div>
+      <div id="week"></div>
+    </div>
+
+    <div class="card">
+      <h2>Dager denne uka</h2>
+      <div id="days" class="days"></div>
+      <div style="margin-top:1rem;">
+        <button id="saveBtn" class="primary">Lagre</button>
+      </div>
+      <p id="status"></p>
+    </div>
+
+    <script>
+      let model = null;
+
+      async function fetchJson(url, options = {}) {
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+      }
+
+      function render() {
+        if (!model) return;
+        document.getElementById("user").textContent = `Innlogget: ${model.user.email}`;
+        document.getElementById("week").textContent = `Uke starter: ${model.weekStart}`;
+
+        const daysDiv = document.getElementById("days");
+        daysDiv.innerHTML = "";
+
+        model.weekdays.forEach((d) => {
+          const wrap = document.createElement("label");
+          wrap.innerHTML = `<input type="checkbox" data-key="${d.key}" ${model.days[d.key] ? "checked" : ""} /> ${d.label} (${d.key})`;
+          daysDiv.appendChild(wrap);
+        });
+      }
+
+      async function init() {
+        const me = await fetchJson("/api/me");
+        if (!me.user) {
+          window.location.href = "/login.html";
+          return;
+        }
+
+        const week = await fetchJson("/api/week");
+        model = { ...week, user: me.user };
+        render();
+      }
+
+      document.getElementById("saveBtn").addEventListener("click", async () => {
+        const checks = document.querySelectorAll("#days input[type=checkbox]");
+        const days = {};
+        checks.forEach((c) => { days[c.dataset.key] = c.checked; });
+
+        const status = document.getElementById("status");
+        status.textContent = "Lagrer...";
+        status.className = "";
+
+        try {
+          await fetchJson("/api/week", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ days })
+          });
+          status.textContent = "Lagret.";
+          status.className = "ok";
+        } catch (e) {
+          status.textContent = `Feil: ${e.message}`;
+          status.className = "err";
+        }
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        await fetchJson("/auth/logout", { method: "POST" });
+        window.location.href = "/login.html";
+      });
+
+      init().catch((e) => {
+        const status = document.getElementById("status");
+        status.textContent = `Feil under init: ${e.message}`;
+        status.className = "err";
+      });
+    </script>
+  </body>
+</html>

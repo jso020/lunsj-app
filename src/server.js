@@ -13,6 +13,7 @@ import {
   upsertSubmission
 } from "./data/store.js";
 import { buildWeeklyExcel } from "./services/excel.js";
+import { buildSampleMenu } from "./services/menu.js";
 import { runReportJob, scheduleDailyReport } from "./services/scheduler.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -136,7 +137,12 @@ app.get("/api/week", requireAuth, async (req, res) => {
   const weekdays = weekdaysFromMonday(new Date(weekStart));
   const existing = await getSubmission(req.session.user.email, weekStart);
   const menuEntry = await getMenuForWeek(weekStart);
-  const menu = menuEntry?.dishes || emptyMenu(weekdays);
+  let menu = menuEntry?.dishes || null;
+
+  if (!menu) {
+    menu = buildSampleMenu(weekStart, weekdays);
+    await upsertMenuForWeek(weekStart, menu, "system:seed");
+  }
 
   const todayKey = toIsoDate(new Date());
   const todayIsInSelectedWeek = weekdays.some((d) => d.key === todayKey);
@@ -202,7 +208,7 @@ app.get("/api/admin/report/download", requireAdmin, async (req, res) => {
   const submissions = await getSubmissionsByWeek(weekStart);
   const menuEntry = await getMenuForWeek(weekStart);
   const weekdays = weekdaysFromMonday(new Date(weekStart));
-  const menu = menuEntry?.dishes || emptyMenu(weekdays);
+  const menu = menuEntry?.dishes || buildSampleMenu(weekStart, weekdays);
 
   const excelPath = await buildWeeklyExcel(weekStart, submissions, menu);
   return res.download(excelPath, `lunsjrapport-${weekStart}.xlsx`);

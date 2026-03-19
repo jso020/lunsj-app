@@ -1,4 +1,4 @@
-﻿# Lunsj-app (v1)
+# Lunsj-app (v1)
 
 En enkel app der ansatte logger inn med OAuth2/OIDC, registrerer om de er pa jobb man-fre i innevaerende uke, og backend sender Excel-rapport pa e-post kl. 08:00.
 
@@ -8,6 +8,7 @@ En enkel app der ansatte logger inn med OAuth2/OIDC, registrerer om de er pa job
 - Registrering av ukevalg (man-fre)
 - Valg av uke (denne eller neste)
 - Ukemeny med "dagens rett"
+- Automatisk POC-meny per uke hvis meny ikke er satt ennå
 - Lagring i lokal JSON-fil
 - Daglig scheduler kl. 08:00 (serverens lokale tid)
 - Excel-rapport (`.xlsx`) + e-post via SMTP

@@ -20,10 +20,18 @@ En enkel app der ansatte logger inn med OAuth2/OIDC, registrerer om de er pa job
    `npm run dev`
 4. Aapne `http://localhost:3000`
 
+## Rask dev-test uten OIDC
+
+Hvis du vil teste flyten uten ferdig OIDC-oppsett, sett:
+`DEV_AUTH_BYPASS_EMAIL=fornavn.etternavn@computas.com`
+
+Da vil "Logg inn med OAuth2" bruke lokal dev-login automatisk.
+
 ## Viktige env-variabler
 
 - `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URI`
 - `ALLOWED_EMAIL_DOMAIN`
+- `DEV_AUTH_BYPASS_EMAIL` (kun lokal dev)
 - `SESSION_SECRET`
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `REPORT_FROM_EMAIL`, `REPORT_TO_EMAIL`
 - `ADMIN_TRIGGER_TOKEN`

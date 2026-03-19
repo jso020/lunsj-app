@@ -13,6 +13,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
+const devBypassEmail = process.env.DEV_AUTH_BYPASS_EMAIL?.toLowerCase();
 
 app.use(express.json());
 app.use(
@@ -36,10 +37,25 @@ function requireAuth(req, res, next) {
 }
 
 app.get("/auth/login", async (req, res) => {
+  if (devBypassEmail) {
+    return res.redirect("/auth/dev-login");
+  }
   if (!oidcClient) {
     return res.status(500).send("OIDC client ikke initialisert.");
   }
   return startLogin(req, res, oidcClient);
+});
+
+app.get("/auth/dev-login", (req, res) => {
+  if (!devBypassEmail) {
+    return res.status(404).send("Dev login er ikke aktivert.");
+  }
+
+  req.session.user = {
+    email: devBypassEmail,
+    name: devBypassEmail
+  };
+  return res.redirect("/");
 });
 
 app.get("/auth/callback", async (req, res) => {
@@ -120,6 +136,12 @@ app.get("/", requireAuth, (req, res) => {
 
 app.listen(port, async () => {
   scheduleDailyReport();
+
+  if (devBypassEmail) {
+    console.log(`Server kjorer pa http://localhost:${port}`);
+    console.log(`Dev auth bypass aktiv for ${devBypassEmail}`);
+    return;
+  }
 
   try {
     oidcClient = await buildOidcClient();

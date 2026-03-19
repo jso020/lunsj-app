@@ -6,6 +6,7 @@ En enkel app der ansatte logger inn med OAuth2/OIDC, registrerer om de er pa job
 
 - OIDC-login med domene-sjekk (styres med `ALLOWED_EMAIL_DOMAIN`, default `computas.com`)
 - Registrering av ukevalg (man-fre)
+- Registrering lagres automatisk ved avhuking (ingen lagreknapp)
 - Valg av uke (denne eller neste)
 - Ukemeny med "dagens rett"
 - Automatisk POC-meny per uke hvis meny ikke er satt ennå
